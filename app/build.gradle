@@ -1,7 +1,21 @@
-plugins { id 'com.android.application' }
+plugins {
+    id 'com.android.application' version '8.7.3'
+}
+
 android {
- namespace 'co.calendario.festivos'
- compileSdk 35
- defaultConfig { applicationId 'co.calendario.festivos'; minSdk 26; targetSdk 35; versionCode 8; versionName '8.0' }
- compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    namespace 'co.calendario.festivos'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'co.calendario.festivos'
+        minSdk 26
+        targetSdk 35
+        versionCode 8
+        versionName '8.0'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
 }
