@@ -1,0 +1,46 @@
+name: Generar APK v8
+on:
+  workflow_dispatch:
+  push:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Verificar calculo de festivos
+        run: |
+          mkdir -p /tmp/festivos-tests
+          javac -d /tmp/festivos-tests app/src/main/java/co/calendario/festivos/Holidays.java app/src/main/java/co/calendario/festivos/NoteBackup.java app/src/main/java/co/calendario/festivos/CalendarSearch.java app/src/main/java/co/calendario/festivos/CalendarNavigation.java checks/HolidaysCheck.java checks/Version7Check.java checks/Version8Check.java
+          java -cp /tmp/festivos-tests co.calendario.festivos.HolidaysCheck
+          java -cp /tmp/festivos-tests co.calendario.festivos.Version7Check
+          java -cp /tmp/festivos-tests co.calendario.festivos.Version8Check
+      - name: Preparar SDK de Android
+        shell: bash
+        run: |
+          task_sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          task_sdkmanager="$task_sdk_root/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$task_sdkmanager" ]; then
+            task_sdkmanager="$(find "$task_sdk_root/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
+          fi
+          if [ ! -x "$task_sdkmanager" ]; then
+            echo 'No se encontro sdkmanager en el SDK de Android del servidor.'
+            exit 1
+          fi
+          "$task_sdkmanager" --sdk_root="$task_sdk_root" 'platforms;android-35' 'build-tools;35.0.0'
+          echo "sdk.dir=$task_sdk_root" > local.properties
+      - name: Compilar APK
+        run: gradle --no-daemon :app:assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Calendario-Colombia-v8-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
